@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>IS Pickleball Night 🎾</title>
+<style>
+  :root {
+    --bull: #16a34a;
+    --bull-bg: #dcfce7;
+    --bull-fg: #14532d;
+    --bear: #1e3a8a;
+    --bear-bg: #dbeafe;
+    --bear-fg: #172554;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --line: #e5e5e5;
+    --ink: #111827;
+    --muted: #6b7280;
+    --accent: #f59e0b;
+    --accent-fg: #78350f;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.45;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: white;
+    padding: 18px 16px 14px;
+    text-align: center;
+  }
+  header h1 { margin: 0; font-size: 20px; letter-spacing: 0.2px; }
+  header .meta { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+  header .meta-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; font-size: 11px; opacity: 0.8; }
+  .nav {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    background: white;
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav button {
+    border: 0; background: transparent;
+    padding: 12px 4px; font-size: 12px; font-weight: 600;
+    color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .nav button.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .container { max-width: 720px; margin: 0 auto; padding: 14px; }
+  .panel { display: none; }
+  .panel.active { display: block; animation: fade 0.15s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .card h2 { margin: 0 0 10px; font-size: 16px; }
+  .card h3 { margin: 14px 0 6px; font-size: 14px; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .grow { flex: 1; }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .pill.bull { background: var(--bull-bg); color: var(--bull-fg); }
+  .pill.bear { background: var(--bear-bg); color: var(--bear-fg); }
+  .pill.skill { background: #fef3c7; color: var(--accent-fg); }
+  .pill.ghost { background: #f3f4f6; color: var(--muted); }
+
+  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .team-col { background: #fafafa; border-radius: 10px; padding: 10px; }
+  .team-col h3 { margin: 0 0 8px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .team-col.bull h3 { color: var(--bull-fg); }
+  .team-col.bear h3 { color: var(--bear-fg); }
+  .team-col ul { list-style: none; padding: 0; margin: 0; }
+  .team-col li {
+    padding: 6px 8px;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .team-col li.resting { opacity: 0.55; }
+  .team-col li.playing { box-shadow: 0 0 0 2px var(--accent); }
+
+  .court {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: white;
+  }
+  .court-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .court-name { font-weight: 700; font-size: 15px; }
+  .court-status { font-size: 11px; color: var(--muted); }
+  .court-status.scored { color: var(--bull); }
+  .court-pair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+  .pair {
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+  }
+  .pair.bull { background: var(--bull-bg); color: var(--bull-fg); }
+  .pair.bear { background: var(--bear-bg); color: var(--bear-fg); }
+  .pair .names { font-size: 13px; font-weight: 600; line-height: 1.3; }
+  .pair .score { font-size: 24px; font-weight: 800; margin-top: 2px; min-height: 28px; }
+  .vs { font-size: 11px; color: var(--muted); font-weight: 600; }
+
+  button.btn {
+    border: 0;
+    background: var(--ink);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 6px;
+  }
+  button.btn.secondary { background: white; color: var(--ink); border: 1px solid var(--line); }
+  button.btn.danger { background: #b91c1c; }
+  button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  input, select {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 15px;
+    background: white;
+    width: 100%;
+  }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .score-inputs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: end; }
+  .score-inputs .vs { padding-bottom: 12px; }
+  .score-inputs input { font-size: 22px; text-align: center; font-weight: 700; padding: 14px 8px; }
+
+  .standings-row {
+    display: grid; grid-template-columns: 1fr auto auto;
+    gap: 10px; align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .standings-row:last-child { border-bottom: 0; }
+  .big-score {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 8px;
+    padding: 16px;
+    border-radius: 12px;
+    background: white;
+    border: 1px solid var(--line);
+    margin-bottom: 12px;
+  }
+  .big-score .side { text-align: center; }
+  .big-score .side .label { font-size: 12px; font-weight: 600; opacity: 0.8; }
+  .big-score .side .points { font-size: 36px; font-weight: 800; line-height: 1.1; margin: 2px 0; }
+  .big-score .side .matches { font-size: 12px; color: var(--muted); }
+  .big-score .side.bull .label, .big-score .side.bull .points { color: var(--bull-fg); }
+  .big-score .side.bear .label, .big-score .side.bear .points { color: var(--bear-fg); }
+  .big-score .vs { font-size: 14px; font-weight: 700; color: var(--muted); }
+
+  .empty {
+    text-align: center; padding: 30px 14px; color: var(--muted);
+    background: white; border: 1px dashed var(--line); border-radius: 12px;
+  }
+  .empty .emoji { font-size: 28px; }
+  .toast {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: white; padding: 10px 14px;
+    border-radius: 8px; font-size: 13px; z-index: 99;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .toast.show { opacity: 1; }
+  .banner {
+    background: #fef3c7; color: var(--accent-fg);
+    padding: 8px 12px; font-size: 12px; text-align: center;
+    border-bottom: 1px solid #fde68a;
+  }
+  .small { font-size: 11px; color: var(--muted); }
+  .tag-row { display: flex; gap: 4px; flex-wrap: wrap; }
+  .games-played { font-size: 11px; color: var(--muted); }
+  .leader-arrow { font-size: 11px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎾 IS Pickleball Night 🏓</h1>
+  <div class="meta">30 April 2026 · 18:00–21:00 · Asoke Sports Club</div>
+  <div class="meta-row">
+    <span>Courts PB3–PB6</span>
+    <span>·</span>
+    <span>Reserve: Chutipar, Thee</span>
+  </div>
+</header>
+
+<div id="banner" class="banner" style="display:none"></div>
+
+<div class="nav" id="nav">
+  <button data-tab="roster" class="active">Roster</button>
+  <button data-tab="round">Round</button>
+  <button data-tab="submit">Submit</button>
+  <button data-tab="standings">Standings</button>
+  <button data-tab="admin">Admin</button>
+</div>
+
+<div class="container">
+
+  <!-- ROSTER -->
+  <div class="panel active" id="panel-roster">
+    <div class="card">
+      <h2>Teams</h2>
+      <div class="small">Skill marker 🎾 / 🏸 = previous racket-sport experience. Pill shows games played so far.</div>
+      <div class="team-grid" style="margin-top:10px">
+        <div class="team-col bull">
+          <h3>🟢 Bull (15)</h3>
+          <ul id="roster-bull"></ul>
+        </div>
+        <div class="team-col bear">
+          <h3>🔵 Bear (15)</h3>
+          <ul id="roster-bear"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CURRENT ROUND -->
+  <div class="panel" id="panel-round">
+    <div id="round-content"></div>
+  </div>
+
+  <!-- SUBMIT SCORE -->
+  <div class="panel" id="panel-submit">
+    <div id="submit-content"></div>
+  </div>
+
+  <!-- STANDINGS -->
+  <div class="panel" id="panel-standings">
+    <div id="standings-content"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="panel" id="panel-admin">
+    <div class="card" id="admin-gate">
+      <h2>Admin</h2>
+      <div class="small">Enter the admin PIN to manage rounds.</div>
+      <label for="admin-pin">PIN</label>
+      <input id="admin-pin" type="password" inputmode="numeric" placeholder="••••" />
+      <button class="btn" id="admin-unlock">Unlock</button>
+    </div>
+    <div id="admin-content" style="display:none"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============= ROSTER ============= */
+const BULL = ["Bam","Jeana","Gate","Jean","Card","Hun","Tanya","Yong","Gun","Lek","Roong","Chin","Thee","Kwan","Penn"];
+const BEAR = ["Jon","Tae (IC)","Non","Ploy","Vij","Paeng","Harry","Turbo","Nut","Pum","Didee","Tae AO","Satang","Tong","Chot"];
+const SKILLED = new Set(["Bam","Jon","Jeana","Tae (IC)","Gate","Non","Jean","Ploy","Card","Vij","Hun"]);
+const BADMINTON = new Set(["Paeng"]);
+const COURTS = ["PB3","PB4","PB5","PB6"];
+const PLAYERS_PER_COURT_PER_TEAM = 2;
+const COURTS_COUNT = COURTS.length;
+
+/* ============= STATE ============= */
+let state = { rounds: [], adminPin: null };
+let mode = "online"; // online (server) or offline (localStorage)
+let adminToken = null;
+let pollTimer = null;
+
+/* ============= UTIL ============= */
+function $(id) { return document.getElementById(id); }
+function toast(msg, ms=1800) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove("show"), ms);
+}
+function setBanner(msg) {
+  const b = $("banner");
+  if (!msg) { b.style.display = "none"; return; }
+  b.textContent = msg;
+  b.style.display = "block";
+}
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ============= API LAYER ============= */
+async function apiGet() {
+  if (mode === "offline") {
+    const raw = localStorage.getItem("pb_state");
+    return raw ? JSON.parse(raw) : { rounds: [] };
+  }
+  try {
+    const r = await fetch("/api/state", { cache: "no-store" });
+    if (!r.ok) throw new Error("bad status");
+    const j = await r.json();
+    if (j._fallback) {
+      mode = "offline";
+      setBanner("⚠️ Backend not configured — running in single-device mode (state only on this phone). Ask the admin to set up Vercel KV.");
+      return apiGet();
+    }
+    return j.state || { rounds: [] };
+  } catch (e) {
+    mode = "offline";
+    setBanner("⚠️ Couldn't reach server — single-device mode active.");
+    return apiGet();
+  }
+}
+async function apiAction(action, payload) {
+  if (mode === "offline") {
+    state = applyAction(state, action, payload);
+    localStorage.setItem("pb_state", JSON.stringify(state));
+    render();
+    return { ok: true };
+  }
+  try {
+    const r = await fetch("/api/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, payload, adminToken })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || "action failed");
+    if (j.state) state = j.state;
+    render();
+    return j;
+  } catch (e) {
+    toast("Error: " + e.message);
+    throw e;
+  }
+}
+
+/* ============= ROUND GENERATION (shared with server) ============= */
+function gamesPlayedMap(rounds) {
+  const map = {};
+  [...BULL, ...BEAR].forEach(p => map[p] = 0);
+  for (const round of rounds) {
+    for (const court of round.courts) {
+      [...court.bull, ...court.bear].forEach(p => { map[p] = (map[p]||0) + 1; });
+    }
+  }
+  return map;
+}
+function generateRound(prevRounds) {
+  const games = gamesPlayedMap(prevRounds);
+  // Sort each team by games played asc, with random tie-break
+  const sortByPlayed = (arr) => shuffle(arr).sort((a,b) => games[a] - games[b]);
+  const bullSorted = sortByPlayed(BULL);
+  const bearSorted = sortByPlayed(BEAR);
+  const playersNeeded = COURTS_COUNT * PLAYERS_PER_COURT_PER_TEAM; // 8 from each side
+  const bullPlaying = shuffle(bullSorted.slice(0, playersNeeded));
+  const bearPlaying = shuffle(bearSorted.slice(0, playersNeeded));
+  const courts = COURTS.map((name, i) => ({
+    court: name,
+    bull: bullPlaying.slice(i*2, i*2+2),
+    bear: bearPlaying.slice(i*2, i*2+2),
+    bullScore: null,
+    bearScore: null,
+    scoredBy: null,
+    scoredAt: null
+  }));
+  return {
+    id: Date.now(),
+    number: prevRounds.length + 1,
+    courts,
+    createdAt: new Date().toISOString()
+  };
+}
+
+function applyAction(state, action, payload) {
+  state = JSON.parse(JSON.stringify(state || { rounds: [] }));
+  if (!state.rounds) state.rounds = [];
+  if (action === "new-round") {
+    state.rounds.push(generateRound(state.rounds));
+  } else if (action === "submit-score") {
+    const { roundId, court, bullScore, bearScore, scoredBy } = payload;
+    const round = state.rounds.find(r => r.id === roundId);
+    if (!round) throw new Error("round not found");
+    const c = round.courts.find(c => c.court === court);
+    if (!c) throw new Error("court not found");
+    c.bullScore = Number(bullScore);
+    c.bearScore = Number(bearScore);
+    c.scoredBy = scoredBy || null;
+    c.scoredAt = new Date().toISOString();
+  } else if (action === "undo-last-round") {
+    state.rounds.pop();
+  } else if (action === "reset-event") {
+    state.rounds = [];
+  } else if (action === "reshuffle-round") {
+    if (state.rounds.length) {
+      state.rounds[state.rounds.length-1] = generateRound(state.rounds.slice(0, -1));
+    }
+  }
+  return state;
+}
+
+/* ============= STATS ============= */
+function computeStats(rounds) {
+  let bullPts = 0, bearPts = 0;
+  let bullWins = 0, bearWins = 0;
+  let matchesPlayed = 0;
+  for (const round of rounds) {
+    for (const c of round.courts) {
+      if (c.bullScore !== null && c.bearScore !== null) {
+        bullPts += c.bullScore;
+        bearPts += c.bearScore;
+        if (c.bullScore > c.bearScore) bullWins++;
+        else if (c.bearScore > c.bullScore) bearWins++;
+        matchesPlayed++;
+      }
+    }
+  }
+  return { bullPts, bearPts, bullWins, bearWins, matchesPlayed };
+}
+
+/* ============= RENDER ============= */
+function render() {
+  renderRoster();
+  renderRound();
+  renderSubmit();
+  renderStandings();
+  renderAdmin();
+}
+
+function renderRoster() {
+  const games = gamesPlayedMap(state.rounds);
+  const currentRound = state.rounds[state.rounds.length - 1];
+  const playingNow = new Set();
+  if (currentRound) {
+    currentRound.courts.forEach(c => {
+      [...c.bull, ...c.bear].forEach(p => playingNow.add(p));
+    });
+  }
+  function row(name) {
+    const skillIcon = SKILLED.has(name) ? "🎾" : BADMINTON.has(name) ? "🏸" : "";
+    const isPlaying = playingNow.has(name);
+    const cls = isPlaying ? "playing" : (currentRound ? "resting" : "");
+    return `<li class="${cls}"><span>${name} ${skillIcon}</span><span class="games-played">${games[name]||0} games</span></li>`;
+  }
+  $("roster-bull").innerHTML = BULL.map(row).join("");
+  $("roster-bear").innerHTML = BEAR.map(row).join("");
+}
+
+function renderRound() {
+  const round = state.rounds[state.rounds.length - 1];
+  if (!round) {
+    $("round-content").innerHTML = `
+      <div class="empty">
+        <div class="emoji">🎾</div>
+        <h3>No round yet</h3>
+        <p>Admin will start Round 1 when everyone's ready.</p>
+      </div>`;
+    return;
+  }
+  const remainingPlayers = [...BULL, ...BEAR].filter(p => {
+    return !round.courts.some(c => c.bull.includes(p) || c.bear.includes(p));
+  });
+  const courtsHtml = round.courts.map(c => {
+    const scored = c.bullScore !== null && c.bearScore !== null;
+    const winner = scored ? (c.bullScore > c.bearScore ? "bull" : c.bearScore > c.bullScore ? "bear" : "tie") : null;
+    return `
+      <div class="court">
+        <div class="court-head">
+          <div class="court-name">${c.court}</div>
+          <div class="court-status ${scored ? "scored" : ""}">${scored ? "✓ submitted" + (winner==="bull"?" · Bull won":winner==="bear"?" · Bear won":" · tie") : "playing…"}</div>
+        </div>
+        <div class="court-pair">
+          <div class="pair bull">
+            <div class="names">${c.bull.join(" + ")}</div>
+            <div class="score">${c.bullScore !== null ? c.bullScore : "–"}</div>
+          </div>
+          <div class="vs">VS</div>
+          <div class="pair bear">
+            <div class="names">${c.bear.join(" + ")}</div>
+            <div class="score">${c.bearScore !== null ? c.bearScore : "–"}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+  $("round-content").innerHTML = `
+    <div class="card">
+      <h2>Round ${round.number}</h2>
+      <div class="small">Started ${new Date(round.createdAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}. 15-minute matches.</div>
+    </div>
+    ${courtsHtml}
+    ${remainingPlayers.length ? `
+      <div class="card">
+        <h3>Resting this round (${remainingPlayers.length})</h3>
+        <div class="tag-row">${remainingPlayers.map(p => `<span class="pill ghost">${p}</span>`).join("")}</div>
+      </div>` : ""}
+  `;
+}
+
+function renderSubmit() {
+  const round = state.rounds[state.rounds.length - 1];
+  if (!round) {
+    $("submit-content").innerHTML = `<div class="empty"><div class="emoji">⏳</div><h3>No active round</h3><p>Wait for the admin to start a round.</p></div>`;
+    return;
+  }
+  const courtOpts = round.courts.map(c => {
+    const done = c.bullScore !== null && c.bearScore !== null;
+    return `<option value="${c.court}" ${done?'data-done="1"':''}>${c.court} — ${c.bull.join("/")} vs ${c.bear.join("/")}${done?" ✓":""}</option>`;
+  }).join("");
+  $("submit-content").innerHTML = `
+    <div class="card">
+      <h2>Submit Score · Round ${round.number}</h2>
+      <div class="small">One person per court submits the result. To re-submit, just send again — the latest wins.</div>
+      <label for="submit-court">Court</label>
+      <select id="submit-court">${courtOpts}</select>
+      <div id="submit-pair-preview" style="margin-top:10px"></div>
+      <label>Score</label>
+      <div class="score-inputs">
+        <div>
+          <div class="small" style="text-align:center;color:var(--bull-fg);font-weight:600">Bull</div>
+          <input type="number" id="submit-bull" min="0" max="99" inputmode="numeric" placeholder="0" />
+        </div>
+        <div class="vs">vs</div>
+        <div>
+          <div class="small" style="text-align:center;color:var(--bear-fg);font-weight:600">Bear</div>
+          <input type="number" id="submit-bear" min="0" max="99" inputmode="numeric" placeholder="0" />
+        </div>
+      </div>
+      <label for="submit-name">Your name (optional)</label>
+      <select id="submit-name">
+        <option value="">— pick your name —</option>
+        ${[...BULL, ...BEAR].sort().map(p => `<option>${p}</option>`).join("")}
+      </select>
+      <button class="btn" id="submit-btn">Submit Score</button>
+    </div>
+  `;
+  const updatePreview = () => {
+    const c = round.courts.find(x => x.court === $("submit-court").value);
+    if (!c) return;
+    $("submit-pair-preview").innerHTML = `
+      <div class="court-pair">
+        <div class="pair bull"><div class="names">${c.bull.join(" + ")}</div></div>
+        <div class="vs">VS</div>
+        <div class="pair bear"><div class="names">${c.bear.join(" + ")}</div></div>
+      </div>`;
+    if (c.bullScore !== null) $("submit-bull").value = c.bullScore;
+    if (c.bearScore !== null) $("submit-bear").value = c.bearScore;
+  };
+  $("submit-court").addEventListener("change", updatePreview);
+  updatePreview();
+  $("submit-btn").addEventListener("click", async () => {
+    const court = $("submit-court").value;
+    const bullScore = parseInt($("submit-bull").value, 10);
+    const bearScore = parseInt($("submit-bear").value, 10);
+    const scoredBy = $("submit-name").value || null;
+    if (Number.isNaN(bullScore) || Number.isNaN(bearScore) || bullScore<0 || bearScore<0) {
+      toast("Enter valid scores"); return;
+    }
+    if (bullScore === bearScore) {
+      if (!confirm("Scores are tied. Submit as a tie?")) return;
+    }
+    $("submit-btn").disabled = true;
+    try {
+      await apiAction("submit-score", { roundId: round.id, court, bullScore, bearScore, scoredBy });
+      toast("Score saved ✓");
+    } finally {
+      $("submit-btn").disabled = false;
+    }
+  });
+}
+
+function renderStandings() {
+  const s = computeStats(state.rounds);
+  const bullLead = s.bullPts > s.bearPts;
+  const bearLead = s.bearPts > s.bullPts;
+  const matchLeader = s.bullWins > s.bearWins ? "bull" : s.bearWins > s.bullWins ? "bear" : null;
+  // Player table
+  const games = gamesPlayedMap(state.rounds);
+  const playerRows = [...BULL, ...BEAR]
+    .sort((a,b) => (games[b]||0) - (games[a]||0) || a.localeCompare(b))
+    .map(p => {
+      const team = BULL.includes(p) ? "bull" : "bear";
+      return `<div class="standings-row">
+        <div>${p} ${SKILLED.has(p)?"🎾":BADMINTON.has(p)?"🏸":""}</div>
+        <div><span class="pill ${team}">${team[0].toUpperCase()+team.slice(1)}</span></div>
+        <div class="games-played">${games[p]||0} games</div>
+      </div>`;
+    }).join("");
+  // Recent matches
+  const recent = [];
+  for (let i = state.rounds.length - 1; i >= 0 && recent.length < 8; i--) {
+    const r = state.rounds[i];
+    for (const c of r.courts) {
+      if (c.bullScore !== null && c.bearScore !== null) {
+        recent.push({ round: r.number, ...c });
+        if (recent.length >= 8) break;
+      }
+    }
+  }
+  $("standings-content").innerHTML = `
+    <div class="big-score">
+      <div class="side bull">
+        <div class="label">🟢 BULL</div>
+        <div class="points">${s.bullPts}</div>
+        <div class="matches">${s.bullWins} matches won ${matchLeader==="bull"?"🏆":""}</div>
+      </div>
+      <div class="vs">vs</div>
+      <div class="side bear">
+        <div class="label">🔵 BEAR</div>
+        <div class="points">${s.bearPts}</div>
+        <div class="matches">${s.bearWins} matches won ${matchLeader==="bear"?"🏆":""}</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Summary</h3>
+      <div class="small">
+        ${s.matchesPlayed} matches scored ·
+        ${bullLead ? "Bull leads on points" : bearLead ? "Bear leads on points" : "Points tied"} (${Math.abs(s.bullPts - s.bearPts)} pt margin) ·
+        ${matchLeader ? matchLeader[0].toUpperCase()+matchLeader.slice(1)+" leads on matches" : "Matches tied"}
+      </div>
+    </div>
+    ${recent.length ? `<div class="card"><h3>Recent matches</h3>
+      ${recent.map(m => `<div class="standings-row">
+        <div><span class="small">R${m.round} ${m.court}</span><br>${m.bull.join("/")} vs ${m.bear.join("/")}</div>
+        <div style="font-weight:700;color:${m.bullScore>m.bearScore?"var(--bull-fg)":m.bearScore>m.bullScore?"var(--bear-fg)":"var(--muted)"}">${m.bullScore}–${m.bearScore}</div>
+        <div></div>
+      </div>`).join("")}
+    </div>` : ""}
+    <div class="card">
+      <h3>Games played per player</h3>
+      ${playerRows}
+    </div>
+  `;
+}
+
+function renderAdmin() {
+  if (!adminToken) {
+    $("admin-gate").style.display = "block";
+    $("admin-content").style.display = "none";
+    return;
+  }
+  $("admin-gate").style.display = "none";
+  $("admin-content").style.display = "block";
+  const round = state.rounds[state.rounds.length - 1];
+  const allScored = round && round.courts.every(c => c.bullScore !== null && c.bearScore !== null);
+  $("admin-content").innerHTML = `
+    <div class="card">
+      <h2>Admin · Round Control</h2>
+      <div class="small">${round ? `Currently on Round ${round.number}. ${allScored ? "All courts scored ✓" : "Some courts still pending."}` : "No round started yet."}</div>
+      <button class="btn" id="btn-new-round">${round ? `Start Round ${round.number+1}` : "Start Round 1"}</button>
+      ${round ? `<button class="btn secondary" id="btn-reshuffle">Re-shuffle current round's matchups</button>` : ""}
+      ${round ? `<button class="btn secondary" id="btn-undo">Undo Round ${round.number}</button>` : ""}
+    </div>
+    <div class="card">
+      <h3>Mode</h3>
+      <div class="small">${mode === "online" ? "🟢 Online — state synced via server. Everyone with the URL sees the same thing." : "🟡 Single-device — state only on this device's browser. Share screen if needed."}</div>
+    </div>
+    <div class="card">
+      <h3>Danger zone</h3>
+      <button class="btn danger" id="btn-reset">Reset entire event</button>
+    </div>
+  `;
+  $("btn-new-round")?.addEventListener("click", async () => {
+    if (round && !allScored) {
+      if (!confirm("Some courts haven't submitted scores yet. Start the next round anyway?")) return;
+    }
+    await apiAction("new-round", {});
+    toast("New round generated");
+    showTab("round");
+  });
+  $("btn-reshuffle")?.addEventListener("click", async () => {
+    if (round.courts.some(c => c.bullScore !== null)) {
+      if (!confirm("This round already has scores submitted. Re-shuffle anyway? Submitted scores will be lost.")) return;
+    }
+    await apiAction("reshuffle-round", {});
+    toast("Re-shuffled");
+  });
+  $("btn-undo")?.addEventListener("click", async () => {
+    if (!confirm(`Undo Round ${round.number}? All scores from this round will be deleted.`)) return;
+    await apiAction("undo-last-round", {});
+    toast("Round undone");
+  });
+  $("btn-reset")?.addEventListener("click", async () => {
+    if (!confirm("Reset the entire event? All rounds and scores will be deleted. This can't be undone.")) return;
+    if (!confirm("Are you absolutely sure?")) return;
+    await apiAction("reset-event", {});
+    toast("Event reset");
+  });
+}
+
+/* ============= TAB NAV ============= */
+function showTab(tab) {
+  document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === "panel-" + tab));
+}
+document.querySelectorAll("#nav button").forEach(b => {
+  b.addEventListener("click", () => showTab(b.dataset.tab));
+});
+
+/* ============= ADMIN UNLOCK ============= */
+$("admin-unlock").addEventListener("click", async () => {
+  const pin = $("admin-pin").value.trim();
+  if (!pin) return;
+  if (mode === "offline") {
+    adminToken = pin; // any pin works offline
+    renderAdmin();
+    toast("Admin unlocked (offline mode)");
+    return;
+  }
+  // Validate against server
+  try {
+    const r = await fetch("/api/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "verify-admin", payload: {}, adminToken: pin })
+    });
+    const j = await r.json();
+    if (j.ok) {
+      adminToken = pin;
+      renderAdmin();
+      toast("Admin unlocked");
+    } else {
+      toast("Wrong PIN");
+    }
+  } catch (e) {
+    toast("Couldn't verify. Try again.");
+  }
+});
+
+/* ============= POLLING ============= */
+async function refresh() {
+  state = await apiGet();
+  render();
+}
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  if (mode === "online") {
+    pollTimer = setInterval(refresh, 5000);
+  }
+}
+
+/* ============= INIT ============= */
+(async function init() {
+  await refresh();
+  startPolling();
+})();
+
+</script>
+</body>
+</html>
