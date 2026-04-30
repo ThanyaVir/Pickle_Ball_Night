@@ -438,10 +438,11 @@ function computeStats(rounds) {
 }
 
 /* ============= RENDER ============= */
-function render() {
+let currentTab = "roster";
+function render(skipPollableFormTabs = false) {
   renderRoster();
   renderRound();
-  renderSubmit();
+  if (!skipPollableFormTabs) renderSubmit(); // Skip during polling to preserve user input
   renderStandings();
   renderAdmin();
 }
@@ -708,6 +709,7 @@ function renderAdmin() {
 
 /* ============= TAB NAV ============= */
 function showTab(tab) {
+  currentTab = tab;
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
   document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === "panel-" + tab));
 }
@@ -748,7 +750,13 @@ $("admin-unlock").addEventListener("click", async () => {
 /* ============= POLLING ============= */
 async function refresh() {
   state = await apiGet();
-  render();
+  // During polling, don't re-render form inputs to preserve user data
+  // Only skip if we're not on initial load
+  if (pollTimer) {
+    render(true);
+  } else {
+    render();
+  }
 }
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
